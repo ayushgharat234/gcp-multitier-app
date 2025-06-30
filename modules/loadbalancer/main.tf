@@ -1,0 +1,48 @@
+resource "google_compute_backend_service" "frontend_backend" {
+  name                  = "frontend-backend"
+  protocol              = "HTTP"
+  port_name             = "http"
+  health_checks         = [var.health_check_self_link]
+  load_balancing_scheme = "EXTERNAL"
+  timeout_sec           = 10
+  enable_cdn            = true
+  security_policy       = google_compute_security_policy.waf_policy.id  
+
+  backend {
+    group = var.frontend_mig
+  }
+}
+
+resource "google_compute_url_map" "url_map" {
+    name = "frontend-url-map"
+    default_service = google_compute_backend_service.frontend_backend.self_link
+}
+
+resource "google_compute_target_http_proxy" "http_proxy" {
+  name    = "frontend-http-proxy"
+  url_map = google_compute_url_map.url_map.self_link
+}
+
+resource "google_compute_global_forwarding_rule" "http_rule" {
+  name                  = "frontend-http-rule"
+  target                = google_compute_target_http_proxy.http_proxy.self_link
+  port_range            = "80"
+  load_balancing_scheme = "EXTERNAL"
+  ip_protocol           = "TCP"
+}
+
+resource "google_compute_security_policy" "waf_policy" {
+  name = "basic-waf"
+
+  rule {
+    action   = "allow"
+    priority = 1000
+    match {
+      versioned_expr = "SRC_IPS_V1"
+      config {
+        src_ip_ranges = ["*"]
+      }
+    }
+    description = "Allow all traffic for testing"
+  }
+}
