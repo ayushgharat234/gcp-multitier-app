@@ -34,3 +34,14 @@ frontend_subnet = "frontend-subnet"
 app_subnet = "app-subnet"
 
 machine_type = "e2-medium"
+
+
+
+
+
+
+allowed_frontend_to_app = ["frontend"]
+allowed_app_to_db       = ["app"]
+db_port                 = 3306
+app_port                = 8080
+enable_cloud_armor      = true

@@ -6,7 +6,7 @@ resource "google_compute_backend_service" "frontend_backend" {
   load_balancing_scheme = "EXTERNAL"
   timeout_sec           = 10
   enable_cdn            = true
-  security_policy       = google_compute_security_policy.waf_policy.id  
+  security_policy       = var.enable_cloud_armor ? google_compute_security_policy.waf_policy.id : null
 
   backend {
     group = var.frontend_mig
@@ -14,8 +14,8 @@ resource "google_compute_backend_service" "frontend_backend" {
 }
 
 resource "google_compute_url_map" "url_map" {
-    name = "frontend-url-map"
-    default_service = google_compute_backend_service.frontend_backend.self_link
+  name            = "frontend-url-map"
+  default_service = google_compute_backend_service.frontend_backend.self_link
 }
 
 resource "google_compute_target_http_proxy" "http_proxy" {
@@ -44,5 +44,17 @@ resource "google_compute_security_policy" "waf_policy" {
       }
     }
     description = "Allow all traffic for testing"
+  }
+
+  rule {
+    action   = "deny(403)"
+    priority = 2147483647
+    match {
+      versioned_expr = "SRC_IPS_V1"
+      config {
+        src_ip_ranges = ["*"]
+      }
+    }
+    description = "Default deny rule"
   }
 }

@@ -19,14 +19,14 @@ variable "subnet" {
 }
 
 variable "machine_type" {
-  type    = string
-  default = "e2-medium"
+  type        = string
+  default     = "e2-medium"
   description = "The machine type (e.g., e2-medium, n1-standard-1) for the VM instance."
 }
 
 variable "instance_tags" {
-  type    = list(string)
-  default = []
+  type        = list(string)
+  default     = []
   description = "A list of network tags to apply to the VM instance for firewall rules and routing."
 }
 

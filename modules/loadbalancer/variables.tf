@@ -19,3 +19,9 @@ variable "health_check_self_link" {
   type        = string
   description = "Self-link to the pre-created health check"
 }
+
+variable "enable_cloud_armor" {
+  type        = bool
+  default     = true
+  description = "Toggle to enable Cloud Armor policy"
+}
