@@ -1,3 +1,4 @@
+# Network module: creates VPC, subnets, NAT, and related networking resources
 module "network" {
   source     = "./modules/network"
   vpc_name   = var.vpc_name
@@ -5,6 +6,7 @@ module "network" {
   nat_region = var.nat_region
 }
 
+# Security module: sets up firewall rules and IAM bindings for access control
 module "security" {
   source                    = "./modules/security"
   vpc_self_link             = module.network.vpc_self_link
@@ -17,6 +19,7 @@ module "security" {
   enable_cloud_armor        = true
 }
 
+# Frontend compute module: deploys managed instance group for frontend tier
 module "frontend_compute" {
   source          = "./modules/compute"
   project_id      = var.project_id
@@ -28,6 +31,7 @@ module "frontend_compute" {
   startup_script  = file("${path.module}/scripts/startup-frontend.sh")
 }
 
+# App compute module: deploys managed instance group for application tier
 module "app_compute" {
   source          = "./modules/compute"
   project_id      = var.project_id
@@ -39,6 +43,7 @@ module "app_compute" {
   startup_script  = file("${path.module}/scripts/startup-app.sh")
 }
 
+# Load balancer module: provisions HTTP(S) load balancer for frontend
 module "loadbalancer" {
   source                 = "./modules/loadbalancer"
   project_id             = var.project_id
@@ -47,6 +52,7 @@ module "loadbalancer" {
   health_check_self_link = module.frontend_compute.health_check_self_link
 }
 
+# DB compute module: deploys managed instance group for database tier
 module "db_compute" {
   source          = "./modules/compute"
   project_id      = var.project_id

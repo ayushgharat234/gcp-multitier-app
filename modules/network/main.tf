@@ -1,9 +1,11 @@
+# VPC network definition for the project
 resource "google_compute_network" "vpc_network" {
   name                    = var.vpc_name
   auto_create_subnetworks = false
   routing_mode            = "REGIONAL"
 }
 
+# Subnetworks for each tier (frontend, app, db) with logging enabled
 resource "google_compute_subnetwork" "subnets" {
   for_each                 = { for subnet in var.subnets : subnet.name => subnet }
   name                     = each.value.name
@@ -21,12 +23,14 @@ resource "google_compute_subnetwork" "subnets" {
   }
 }
 
+# Cloud Router for NAT configuration
 resource "google_compute_router" "nat_router" {
   name    = "${var.vpc_name}-router"
   region  = var.nat_region
   network = google_compute_network.vpc_network.name
 }
 
+# NAT Gateway to provide internet access to private subnets
 resource "google_compute_router_nat" "nat_gateway" {
   name                               = "${var.vpc_name}-nat"
   router                             = google_compute_router.nat_router.name

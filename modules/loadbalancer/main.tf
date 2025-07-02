@@ -1,3 +1,4 @@
+# Backend service for the frontend, connects the load balancer to the frontend instance group
 resource "google_compute_backend_service" "frontend_backend" {
   name                  = "frontend-backend"
   protocol              = "HTTP"
@@ -11,18 +12,26 @@ resource "google_compute_backend_service" "frontend_backend" {
   backend {
     group = var.frontend_mig
   }
+
+  log_config {
+    enable       = true
+    sample_rate  = 1.0
+  }
 }
 
+# URL map to route incoming requests to the backend service
 resource "google_compute_url_map" "url_map" {
   name            = "frontend-url-map"
   default_service = google_compute_backend_service.frontend_backend.self_link
 }
 
+# HTTP proxy to forward requests to the URL map
 resource "google_compute_target_http_proxy" "http_proxy" {
   name    = "frontend-http-proxy"
   url_map = google_compute_url_map.url_map.self_link
 }
 
+# Global forwarding rule to direct external HTTP traffic to the proxy
 resource "google_compute_global_forwarding_rule" "http_rule" {
   name                  = "frontend-http-rule"
   target                = google_compute_target_http_proxy.http_proxy.self_link
@@ -31,6 +40,7 @@ resource "google_compute_global_forwarding_rule" "http_rule" {
   ip_protocol           = "TCP"
 }
 
+# Cloud Armor security policy (WAF) for the load balancer
 resource "google_compute_security_policy" "waf_policy" {
   name = "basic-waf"
 

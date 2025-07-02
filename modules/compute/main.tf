@@ -1,3 +1,4 @@
+# Instance template for VM creation, specifying machine type, image, network, and startup script
 resource "google_compute_instance_template" "template" {
   name_prefix = "${var.instance_prefix}-tmpl"
   project     = var.project_id
@@ -23,6 +24,7 @@ resource "google_compute_instance_template" "template" {
   }
 }
 
+# Managed Instance Group (MIG) to manage a group of identical VMs using the above template
 resource "google_compute_region_instance_group_manager" "mig" {
   name               = "${var.instance_prefix}-mig"
   project            = var.project_id
@@ -36,12 +38,18 @@ resource "google_compute_region_instance_group_manager" "mig" {
 
   target_size = 2
 
+  named_port {
+    name = "http"
+    port = 80
+  }
+
   auto_healing_policies {
     initial_delay_sec = 300
     health_check      = google_compute_health_check.http_health_check.self_link
   }
 }
 
+# Health check resource to monitor the health of instances in the group
 resource "google_compute_health_check" "http_health_check" {
   name        = "${var.instance_prefix}-http-health-check"
   project     = var.project_id
